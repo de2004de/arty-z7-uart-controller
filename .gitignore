@@ -1,0 +1,27 @@
+# Generated IDE state and build products
+.Xil/
+_ide/*
+!_ide/launch.json
+*.cache/
+*.runs/
+*.sim/
+*.ip_user_files/
+*.hw/
+*.jou
+*.log
+*.wdb
+*.dcp
+*.elf
+*.bit
+*.ltx
+build/
+export/
+__pycache__/
+.compile_commands/
+compile_commands.json
+/hardware/*.gen/*
+!/hardware/*.gen/sources_1/
+**/*.gen/sources_1/*
+!**/*.gen/sources_1/bd/
+**/*.gen/sources_1/bd/*/*
+!**/*.gen/sources_1/bd/*/hdl/
