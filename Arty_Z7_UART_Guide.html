@@ -1,0 +1,1178 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Arty Z7-20 UART — Hardware & Software Guide</title>
+<style>
+:root{color-scheme:light;--ink:#193043;--muted:#526879;--accent:#096b75;--line:#d9e4e9;--paper:#fff;--bg:#f1f5f7}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:30px}body{margin:0;color:var(--ink);background:var(--bg);font:16px/1.65 'Segoe UI',Arial,sans-serif}
+a{color:#076b87;text-underline-offset:3px}a:hover{color:#003e50}header{background:#122d40;color:white;padding:45px max(30px,calc((100vw - 1360px)/2));border-bottom:6px solid #32c0b5}header .eyebrow{color:#8fe3dc;letter-spacing:2px;text-transform:uppercase;font-size:12px;font-weight:700}header h1{font-size:clamp(30px,4vw,48px);line-height:1.15;letter-spacing:-1px;margin:14px 0}header p{color:#d2e1e9;max-width:780px;margin:0 0 22px}header .tags{display:flex;flex-wrap:wrap;gap:10px}.tags span{border:1px solid #526b7b;border-radius:5px;padding:5px 10px;font-size:13px}
+.layout{max-width:1420px;margin:auto;display:grid;grid-template-columns:270px minmax(0,1fr);gap:32px;padding:32px}nav{position:sticky;top:22px;max-height:calc(100vh - 44px);overflow:auto;align-self:start;padding-right:12px}nav strong{display:block;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 14px;color:var(--muted)}nav a{display:block;text-decoration:none;font-size:13px;line-height:1.45;padding:8px 10px;border-left:2px solid var(--line)}nav a:hover{background:#dfecef;border-color:var(--accent)}nav .files{margin-top:25px;padding-top:15px;border-top:1px solid var(--line)}main{min-width:0;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:34px 46px;box-shadow:0 5px 24px #16364b05}main>h1{display:none}h2{font-size:27px;line-height:1.3;margin:54px 0 20px;padding-top:25px;border-top:2px solid var(--line);letter-spacing:-.4px}h2:first-of-type{margin-top:0;padding-top:0;border-top:0}h3{font-size:20px;line-height:1.4;margin:30px 0 12px}p{margin:14px 0}strong{color:#122e41}.anchor{font-size:16px;margin-left:9px;opacity:0;text-decoration:none}h2:hover .anchor,h3:hover .anchor,.anchor:focus{opacity:1}.table-scroll{overflow-x:auto;margin:22px 0;border:1px solid var(--line);border-radius:6px}table{width:100%;border-collapse:collapse;font-size:14px;line-height:1.55}th{text-align:left;background:#eaf2f4;color:#164b58;font-weight:650}td,th{padding:11px 13px;border-bottom:1px solid var(--line);vertical-align:top}tr:last-child td{border-bottom:0}tbody tr:nth-child(even){background:#f8fafb}td code{font-size:12px}code{font: .89em/1.55 Consolas,'Courier New',monospace;background:#eef3f5;border-radius:3px;padding:2px 4px;overflow-wrap:anywhere}pre{background:#102b3a;color:#e4f2f5;border-radius:7px;padding:22px;overflow:auto;font:13px/1.65 Consolas,'Courier New',monospace;tab-size:4}pre code{background:none;padding:0;color:inherit;overflow-wrap:normal;font:inherit}li{padding-left:3px;margin:8px 0}ol,ul{padding-left:26px}footer{max-width:1420px;margin:0 auto;padding:0 32px 35px;font-size:12px;color:var(--muted)}.toolbar{display:flex;gap:12px;align-items:center;margin:0 0 20px;font-size:12px;color:var(--muted)}button{background:var(--accent);color:white;border:0;border-radius:5px;padding:9px 15px;font:600 13px 'Segoe UI',sans-serif;cursor:pointer}button:hover{background:#084c55}
+@media(max-width:1000px){.layout{grid-template-columns:220px minmax(0,1fr);gap:18px;padding:20px}main{padding:28px}nav a{font-size:12px}}
+@media(max-width:760px){.layout{display:block;padding:15px}nav{position:static;max-height:250px;margin-bottom:22px;padding:15px;background:white;border:1px solid var(--line);border-radius:7px}main{padding:23px 18px}header{padding:30px 23px}h2{font-size:24px}pre{font-size:11px;padding:15px}}
+@media print{@page{size:A4;margin:17mm}html{scroll-behavior:auto}body{background:white;font-size:10pt;line-height:1.5}header{background:white;color:#173244;padding:0 0 20px;border-bottom:3px solid #096b75;break-after:avoid}header h1{font-size:28pt}header .eyebrow,header p{color:#405969}.tags span{color:#173244;border-color:#a7bbc4}.layout{display:block;padding:0}nav,.toolbar,.anchor,footer{display:none}main{border:0;box-shadow:none;padding:22px 0;border-radius:0}h2{font-size:18pt;margin:25px 0 12px;break-after:avoid}h3{font-size:13pt;break-after:avoid}pre{color:#173244;background:#edf3f5;font-size:8pt;white-space:pre-wrap;overflow-wrap:anywhere;break-inside:avoid}table{font-size:8.5pt}.table-scroll{overflow:visible;border-radius:0}tr{break-inside:avoid}thead{display:table-header-group}a{color:inherit;text-decoration:none}code{font-size:.9em}}
+</style></head><body>
+<header><div class="eyebrow">Project reference · Revision 1 · 17 November 2026</div><h1>Arty Z7-20 UART</h1><p>A learning guide to the complete hardware/software loopback: from a character in HTerm to your VHDL transmitter, receiver, FIFO, and back.</p><div class="tags"><span>ARM Cortex-A9 + VHDL</span><span>100 MHz PL clock</span><span>115200 / 9600 baud</span><span>32-byte RX FIFO</span></div></header>
+<div class="layout"><nav aria-label="Contents"><strong>Inside the guide</strong><a href="#section-1">1. Purpose and scope</a>
+<a href="#section-2">2. The complete data path</a>
+<a href="#section-5">3. Project organization and build artifacts</a>
+<a href="#section-8">4. Vivado block design</a>
+<a href="#section-12">5. GPIO interface contract</a>
+<a href="#section-17">6. VHDL modules</a>
+<a href="#section-24">7. Why the command and completion logic exists</a>
+<a href="#section-30">8. C application structure</a>
+<a href="#section-38">9. A worked transaction: sending A</a>
+<a href="#section-39">10. Rebuild, export, and run</a>
+<a href="#section-45">11. Verification and evidence</a>
+<a href="#section-50">12. Performance and current limitations</a>
+<a href="#section-51">13. Troubleshooting</a>
+<a href="#section-52">14. Extending the project to an external device</a>
+<a href="#section-55">15. Learning reference</a>
+<a href="#section-56">16. Source index and document maintenance</a><div class="files"><a href="Arty_Z7_UART_Guide.md">Editable Markdown</a><a href="source_manifest.json">Source fingerprints</a></div></nav><main><div class="toolbar"><button type="button" onclick="window.print()">Print / save PDF</button><span>7,909 words · Based on saved sources and reported tests</span></div><h1>Arty Z7-20 UART Loopback</h1>
+<h2 id="section-1">1. Purpose and scope<a class="anchor" href="#section-1" aria-label="Link to section">#</a></h2>
+<p><strong>Hardware and software reference · Revision 1 · 17 November 2026</strong></p>
+<p>This project lets an ARM program test a UART that you designed in VHDL. You type a character in HTerm. The ARM receives it through the board&#39;s PS UART0, asks your FPGA transmitter to serialize it, retrieves the byte reconstructed by your FPGA receiver, checks it, and sends it back to HTerm.</p>
+<p>The project has progressed from Hello World, through software-controlled LEDs, to a working hardware/software UART loopback. The current application echoes characters after checking that they passed through the custom UART correctly. Uppercase <code>Q</code> exits the application.</p>
+<p>This guide documents the saved project in <code>.</code>, inspected on the date above. Hardware behavior comes from the VHDL, block design, constraints, and routed timing report. Software behavior comes from the current <code>helloworld.c</code> and platform/launch configuration. Board-test results are the outputs you reported; this documentation task did not rerun or reprogram the board.</p>
+<p><strong>Reading order:</strong> Sections 2–4 explain the system. Sections 5–9 explain its implementation. Sections 10–12 explain rebuilding and testing. Sections 13–15 cover troubleshooting and future changes. The source index and file fingerprint manifest help you find the exact files.</p>
+<h2 id="section-2">2. The complete data path<a class="anchor" href="#section-2" aria-label="Link to section">#</a></h2>
+<pre><code class="language-text">PC / HTerm                         Arty Z7-20
+                                  ┌──────────────────────────────┐
+     character ── USB serial ───► │ PS UART0 RX                   │
+                                  │    ↓ inbyte()                 │
+                                  │ ARM Cortex-A9 program         │
+                                  │    ↓ AXI GPIO channel 1       │
+                                  │ command + 8-bit parallel data │
+                                  │    ↓ command pulse            │
+                                  │ VHDL TX ── serial ──► VHDL RX │
+                                  │                         ↓    │
+                                  │                    RX FIFO   │
+                                  │                         ↓    │
+                                  │ AXI GPIO channel 2 → ARM     │
+      echo ◄─── USB serial ────── │ PS UART0 TX ← outbyte()       │
+                                  └──────────────────────────────┘
+</code></pre>
+<p>The ARM is an active participant: it reads a byte, writes commands, polls status, compares results, and echoes the result. PS UART0 RX is not wired straight into the VHDL transmitter. The bridge between software and your HDL is a parallel memory-mapped GPIO interface.</p>
+<h3 id="section-3">Two different UARTs<a class="anchor" href="#section-3" aria-label="Link to section">#</a></h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Property</th>
+<th>PS UART0</th>
+<th>Your PL UART</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Implementation</td>
+<td>Built into the Zynq processing system</td>
+<td>VHDL synthesized into FPGA logic</td>
+</tr>
+<tr>
+<td>Purpose here</td>
+<td>PC communication</td>
+<td>Test your TX, RX, FIFO, and command interface</td>
+</tr>
+<tr>
+<td>Rate</td>
+<td>115200 baud</td>
+<td>Approximately 9600 baud</td>
+</tr>
+<tr>
+<td>Frame</td>
+<td>8 data bits, no parity, 1 stop bit</td>
+<td>8 data bits, no parity, 1 stop bit</td>
+</tr>
+<tr>
+<td>Connection</td>
+<td>UART0 on MIO14–15; board USB/UART connection</td>
+<td>TX connected to RX inside the FPGA</td>
+</tr>
+<tr>
+<td>Software access</td>
+<td><code>inbyte()</code> / <code>outbyte()</code> through BSP standard I/O</td>
+<td><code>XGpio_DiscreteWrite()</code> / <code>XGpio_DiscreteRead()</code></td>
+</tr>
+</tbody></table></div>
+<p>The two baud rates do not have to match. Software transfers complete bytes between two separate serial links. It does, however, have to respect the slower link&#39;s throughput.</p>
+<h3 id="section-4">PS, PL, and the processor<a class="anchor" href="#section-4" aria-label="Link to section">#</a></h3>
+<p><strong>PS</strong> means Processing System: the ARM Cortex-A9 processor and built-in peripherals. <strong>PL</strong> means Programmable Logic: the FPGA fabric that implements your VHDL and the AXI IP blocks.</p>
+<p>This project runs on the existing Zynq ARM processor, <code>ps7_cortexa9_0</code>. It does not use MicroBlaze. The C application runs in a standalone domain rather than under Linux.</p>
+<p>The board&#39;s USB host connector is not interchangeable with its USB JTAG/UART connection. Use the micro-USB JTAG/UART connection used in the successful tests. A detected COM port proves that the PC sees the USB serial interface; it does not prove that your ARM program or your custom FPGA circuit is running.</p>
+<h2 id="section-5">3. Project organization and build artifacts<a class="anchor" href="#section-5" aria-label="Link to section">#</a></h2>
+<h3 id="section-6">Active locations<a class="anchor" href="#section-6" aria-label="Link to section">#</a></h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Current location</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Project root</td>
+<td><code>.</code></td>
+</tr>
+<tr>
+<td>Vivado project</td>
+<td><code>./hardware/arty_z7_hello.xpr</code></td>
+</tr>
+<tr>
+<td>Block design</td>
+<td><code>./hardware/arty_z7_hello.srcs/sources_1/bd/system/system.bd</code></td>
+</tr>
+<tr>
+<td>Exported hardware used by platform</td>
+<td><code>./system_wrapper.xsa</code></td>
+</tr>
+<tr>
+<td>Active Vitis workspace</td>
+<td><code>./vitis_workspace</code></td>
+</tr>
+<tr>
+<td>Platform component</td>
+<td><code>arty_uart0_platform</code></td>
+</tr>
+<tr>
+<td>Application component</td>
+<td><code>hello_world</code></td>
+</tr>
+<tr>
+<td>Standalone domain</td>
+<td><code>standalone_ps7_cortexa9_0</code></td>
+</tr>
+<tr>
+<td>Application source</td>
+<td><code>./vitis_workspace/hello_world/src/helloworld.c</code></td>
+</tr>
+<tr>
+<td>Application executable</td>
+<td><code>./vitis_workspace/hello_world/build/hello_world.elf</code></td>
+</tr>
+</tbody></table></div>
+<p>Open <code>vitis_workspace</code> itself in Vitis. The project also contains an older <code>software_jtag</code> workspace with similarly named components. Opening the parent directory can expose duplicate <code>hello_world</code> and platform entries, such as <code>(1)</code> and <code>(2)</code>. Check the component&#39;s filesystem path instead of relying on the displayed suffix.</p>
+<p>The current platform references the XSA in the project root. Do not assume an older export in <code>hardware/</code> or the older <code>arty_z7_hello.xsa</code> is current.</p>
+<h3 id="section-7">What each generated file does<a class="anchor" href="#section-7" aria-label="Link to section">#</a></h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>File or component</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>VHDL sources</td>
+<td>Describe hardware registers, wires, state machines, and memory behavior</td>
+</tr>
+<tr>
+<td><code>system.bd</code></td>
+<td>Describes the connected PS, AXI IP, GPIO, and custom module</td>
+</tr>
+<tr>
+<td><code>system_wrapper</code></td>
+<td>Generated HDL top-level wrapper around the block design</td>
+</tr>
+<tr>
+<td><code>.xdc</code></td>
+<td>Physical pin and electrical/timing constraints</td>
+</tr>
+<tr>
+<td><code>.bit</code></td>
+<td>Configures the PL hardware</td>
+</tr>
+<tr>
+<td><code>.xsa</code></td>
+<td>Hardware handoff to Vitis, including hardware description and the bitstream when exported with it</td>
+</tr>
+<tr>
+<td>Platform / BSP</td>
+<td>Supplies hardware definitions, startup support, and drivers for the application</td>
+</tr>
+<tr>
+<td><code>.elf</code></td>
+<td>Compiled ARM program loaded into target memory</td>
+</tr>
+<tr>
+<td>PS initialization Tcl</td>
+<td>Initializes the processing system for the configured hardware</td>
+</tr>
+</tbody></table></div>
+<p>The current synthesis top is <code>system_wrapper</code>. Vivado manages the active wrapper under the generated <code>.gen</code> tree. An older imported wrapper also exists; do not edit a generated wrapper to change the design. Edit the block design or source module and regenerate.</p>
+<p>The original <code>UART_VHDL</code> project is the origin of the UART modules. The working integration uses its own imported copies. Editing the original project does not automatically update those copies.</p>
+<h2 id="section-8">4. Vivado block design<a class="anchor" href="#section-8" aria-label="Link to section">#</a></h2>
+<h3 id="section-9">Blocks and their jobs<a class="anchor" href="#section-9" aria-label="Link to section">#</a></h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Block</th>
+<th>Function in this design</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>processing_system7_0</code></td>
+<td>ARM system, PS UART0, DDR interface, AXI master, PL clock and reset sources</td>
+</tr>
+<tr>
+<td><code>axi_smc</code></td>
+<td>AXI SmartConnect; routes one PS master interface to the two GPIO peripherals</td>
+</tr>
+<tr>
+<td><code>axi_gpio_0</code></td>
+<td>Earlier one-bit LED output peripheral; retained in hardware</td>
+</tr>
+<tr>
+<td><code>axi_gpio_1</code></td>
+<td>Dual-channel command/status bridge to the custom UART</td>
+</tr>
+<tr>
+<td><code>rst_ps7_0_100M</code></td>
+<td>Generates reset signals with the required polarities for the clock domain</td>
+</tr>
+<tr>
+<td><code>xlslice_0</code>, <code>xlslice_1</code>, <code>xlslice_2</code></td>
+<td>Split the command word into byte, TX request, and read request</td>
+</tr>
+<tr>
+<td><code>xlconcat_0</code></td>
+<td>Packs the byte and status flags into the status word</td>
+</tr>
+<tr>
+<td><code>uart_software_interf_0</code></td>
+<td>Instance of your VHDL <code>uart_software_interface</code> module</td>
+</tr>
+</tbody></table></div>
+<p>The ARM accesses peripherals through <code>M_AXI_GP0</code>. SmartConnect connects <code>S00_AXI</code> to that master, <code>M00_AXI</code> to the LED GPIO, and <code>M01_AXI</code> to the UART GPIO. AXI GPIO converts memory-mapped transactions into ordinary parallel signals. It does not perform serial transmission itself.</p>
+<p>There are two AXI GPIO IP instances, providing three used logical channels: one LED channel plus two UART channels. The UART bridge needs separate output and input paths; dual-channel GPIO packages them into one IP instance. The LED peripheral is independent and could be removed if it is no longer needed.</p>
+<h3 id="section-10">Clocks and reset<a class="anchor" href="#section-10" aria-label="Link to section">#</a></h3>
+<p>The PS provides <code>FCLK_CLK0</code> at <strong>100 MHz</strong>, so one hardware clock period is <strong>10 ns</strong>. It drives the custom UART wrapper, both GPIO AXI clocks, SmartConnect, the reset controller&#39;s <code>slowest_sync_clk</code>, and the PS <code>M_AXI_GP0_ACLK</code> input.</p>
+<p><code>FCLK_RESET0_N</code> feeds the reset controller. Its <code>peripheral_aresetn</code> output supplies the active-low resets for SmartConnect and the GPIO IP. Its <code>peripheral_reset</code> output supplies the active-high <code>rst</code> input of the custom VHDL wrapper. The custom sequential processes apply reset at a rising clock edge.</p>
+<p>This polarity matters: a signal named <code>aresetn</code> is asserted low, while your VHDL tests <code>rst = &#39;1&#39;</code>. Interchanging them can hold the circuit in reset or prevent initialization.</p>
+<p>The baud generator produces a <strong>clock-enable pulse</strong>, not a new clock. TX and RX remain clocked at 100 MHz and advance their serial timing when <code>tick = &#39;1&#39;</code>. The GPIO command path and custom hardware share that clock domain.</p>
+<h3 id="section-11">Physical I/O<a class="anchor" href="#section-11" aria-label="Link to section">#</a></h3>
+<p>DDR and FIXED_IO connect the PS to the board. The retained LED output is <code>led0[0]</code>, constrained to package pin <code>R14</code> with <code>LVCMOS33</code> in <code>led_pin.xdc</code>. The current C application does not initialize or control this LED GPIO.</p>
+<p>The custom UART&#39;s serial link is internal. There are currently no external PL TX/RX pins to connect to a display or USB/UART adapter.</p>
+<h2 id="section-12">5. GPIO interface contract<a class="anchor" href="#section-12" aria-label="Link to section">#</a></h2>
+<p>This section is the agreement between the C program and VHDL. Both must use the same bit positions, directions, and handshake rules.</p>
+<h3 id="section-13">Addresses and channel configuration<a class="anchor" href="#section-13" aria-label="Link to section">#</a></h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Peripheral</th>
+<th>Base address</th>
+<th>Configuration</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>axi_gpio_0</code></td>
+<td><code>0x41200000</code></td>
+<td>Channel 1: one output bit for LED</td>
+</tr>
+<tr>
+<td><code>axi_gpio_1</code></td>
+<td><code>0x41210000</code></td>
+<td>Channel 1: 10 output bits; channel 2: 13 input bits</td>
+</tr>
+</tbody></table></div>
+<p>Each peripheral has a 64 KiB assigned address range. The useful UART GPIO registers are:</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Register</th>
+<th>Offset from UART GPIO base</th>
+<th>Address</th>
+<th>Use here</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Channel 1 DATA</td>
+<td><code>0x00</code></td>
+<td><code>0x41210000</code></td>
+<td>Write data and requests</td>
+</tr>
+<tr>
+<td>Channel 1 TRI</td>
+<td><code>0x04</code></td>
+<td><code>0x41210004</code></td>
+<td>Direction register where applicable</td>
+</tr>
+<tr>
+<td>Channel 2 DATA</td>
+<td><code>0x08</code></td>
+<td><code>0x41210008</code></td>
+<td>Read byte and status</td>
+</tr>
+<tr>
+<td>Channel 2 TRI</td>
+<td><code>0x0C</code></td>
+<td><code>0x4121000C</code></td>
+<td>Direction register where applicable</td>
+</tr>
+</tbody></table></div>
+<p>The application uses the generated <code>XPAR_AXI_GPIO_1_BASEADDR</code> macro and driver channel numbers, rather than calculating these addresses manually. Recheck generated hardware definitions if you change address assignments.</p>
+<p>Channel 1 is configured <strong>All Outputs</strong> and channel 2 <strong>All Inputs</strong> in Vivado. That fixed configuration is why the final C code does not call <code>XGpio_SetDataDirection()</code> for this GPIO. Dual-channel mode alone does not set the directions. For configurable directions, a direction-mask bit of <code>0</code> means output and <code>1</code> means input. Writing the data register for an input does not drive that input. <a href="https://docs.amd.com/r/en-US/pg144-axi-gpio/Operation">AMD GPIO operation</a>, <a href="https://docs.amd.com/r/en-US/pg144-axi-gpio/AXI-GPIO-Data-Register-GPIOx_DATA">AMD GPIO data registers</a>.</p>
+<h3 id="section-14">Channel 1: software → hardware<a class="anchor" href="#section-14" aria-label="Link to section">#</a></h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Bits</th>
+<th>VHDL signal</th>
+<th>C mask</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>7:0</td>
+<td><code>tx_data</code></td>
+<td><code>UART_DATA_MASK = 0x000000FF</code></td>
+<td>Byte to transmit</td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>tx_command</code></td>
+<td><code>UART_TX_COMMAND_MASK = 0x00000100</code></td>
+<td>Rising request starts one transmission</td>
+</tr>
+<tr>
+<td>9</td>
+<td><code>read_command</code></td>
+<td><code>UART_READ_COMMAND_MASK = 0x00000200</code></td>
+<td>Rising request attempts one FIFO read</td>
+</tr>
+</tbody></table></div>
+<p><code>xlslice_0</code> extracts bits 7:0, <code>xlslice_1</code> extracts bit 8, and <code>xlslice_2</code> extracts bit 9. Each receives the same 10-bit GPIO output bus. These blocks select wires; they do not store data or introduce a clocked handshake.</p>
+<p>Examples:</p>
+<pre><code class="language-text">0x00000000  → lower both requests; byte field becomes zero
+0x00000155  → byte 0x55 and TX request high
+0x00000200  → FIFO read request high
+</code></pre>
+<p><code>XGpio_DiscreteWrite()</code> replaces the whole channel output word. Writing a read command also clears the TX request. The current helpers intentionally run sequentially; they are not safe to call concurrently without redesigning command ownership.</p>
+<h3 id="section-15">Channel 2: hardware → software<a class="anchor" href="#section-15" aria-label="Link to section">#</a></h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Bits</th>
+<th>VHDL signal</th>
+<th>C mask</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>7:0</td>
+<td><code>fifo_data</code></td>
+<td><code>UART_DATA_MASK = 0x000000FF</code></td>
+<td>Last byte produced by an accepted FIFO read</td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>fifo_empty</code></td>
+<td><code>UART_FIFO_EMPTY_MASK = 0x00000100</code></td>
+<td>No unread bytes remain</td>
+</tr>
+<tr>
+<td>9</td>
+<td><code>fifo_full</code></td>
+<td><code>UART_FIFO_FULL_MASK = 0x00000200</code></td>
+<td>All 32 FIFO positions are occupied</td>
+</tr>
+<tr>
+<td>10</td>
+<td><code>tx_busy</code></td>
+<td><code>UART_TX_BUSY_MASK = 0x00000400</code></td>
+<td>Transmitter is sending a frame</td>
+</tr>
+<tr>
+<td>11</td>
+<td><code>tx_complete</code></td>
+<td><code>UART_TX_COMPLETE_MASK = 0x00000800</code></td>
+<td>Persistent TX completion flag</td>
+</tr>
+<tr>
+<td>12</td>
+<td><code>read_complete</code></td>
+<td><code>UART_READ_COMPLETE_MASK = 0x00001000</code></td>
+<td>Persistent read completion flag</td>
+</tr>
+</tbody></table></div>
+<p>Concat order is significant: <code>In0</code> is the 8-bit <code>fifo_data</code>; <code>In1</code> through <code>In5</code> are empty, full, busy, TX completion, and read completion respectively. Its 13-bit output connects to <code>gpio2_io_i</code>.</p>
+<p>The wrapper also has <code>tx_done</code> and <code>rx_error</code> outputs, but they are not connected to software-visible status bits in this block design. Software polls <code>tx_complete</code>, not the short <code>tx_done</code> pulse.</p>
+<h3 id="section-16">How to interpret a status sample<a class="anchor" href="#section-16" aria-label="Link to section">#</a></h3>
+<p>After a fresh hardware reset, <code>0x00000100</code> means FIFO empty, output byte zero, TX idle, and both completion flags clear. The startup print uses hexadecimal formatting (<code>%08x</code>); this is not an eight-digit binary number. The program prints the expected value but does not assert equality at startup.</p>
+<p>After reading the last byte <code>0x55</code>, the output byte remains <code>0x55</code> even though the FIFO is empty. With read completion still high, an otherwise idle status is <code>0x00001155</code>; after acknowledgement it is <code>0x00000155</code>. These are valid states. A retained output byte does not mean another unread byte exists.</p>
+<p>Check flags with masks, for example <code>(status &amp; UART_TX_COMPLETE_MASK) != 0U</code>. Comparing that expression to <code>1</code> would fail because bit 11 contributes <code>0x800</code>, not <code>1</code>.</p>
+<h2 id="section-17">6. VHDL modules<a class="anchor" href="#section-17" aria-label="Link to section">#</a></h2>
+<h3 id="section-18">Hierarchy<a class="anchor" href="#section-18" aria-label="Link to section">#</a></h3>
+<pre><code class="language-text">system_wrapper / system.bd
+└── uart_software_interface
+    ├── command_pulse             [TX request]
+    ├── command_pulse             [FIFO read request]
+    └── uart_loopback_buffered
+        ├── uart_loopback_core
+        │   ├── uart_baud         [BAUD_RATE.vhd]
+        │   ├── TX
+        │   └── RX
+        └── FIFO
+</code></pre>
+<p><code>uart_pkg.vhd</code> supplies the UART timing constants. The older <code>uart2.vhd</code> is present in the imported sources but is not the top of this integrated hierarchy.</p>
+<h3 id="section-19">6.1 Timing package and baud generator<a class="anchor" href="#section-19" aria-label="Link to section">#</a></h3>
+<p>The current constants are <code>CLK_FREQ = 100000000</code>, <code>BAUD_RATE = 9600</code>, and <code>BAUD_DIV = CLK_FREQ / (BAUD_RATE * 16)</code>. Integer division gives <strong>651</strong>.</p>
+<p>The <code>uart_baud</code> counter generates a one-clock-wide <code>tick</code> every 651 clocks. Reset clears its counter and output pulse.</p>
+<pre><code class="language-text">Clock period       = 1 / 100 MHz           = 10 ns
+Tick interval      = 651 × 10 ns           = 6.51 µs
+Nominal bit period = 16 × 6.51 µs          = 104.16 µs
+Actual baud        = 100000000 / (651×16)  ≈ 9600.614 baud
+Baud error         ≈ +0.0064%
+8N1 frame          = 10 bit periods        ≈ 1.0416 ms
+</code></pre>
+<p>The tick runs freely. A request can arrive between ticks, so the initial start-bit timing has tick-phase alignment effects; the frame duration above is the nominal value, not a promise of identical nanosecond duration for every request.</p>
+<p>Changing the actual PL clock requires updating the timing constants or the clock configuration so they agree. Changing the C application&#39;s PC baud rate does not change this VHDL divider.</p>
+<h3 id="section-20">6.2 TX: parallel byte to serial frame<a class="anchor" href="#section-20" aria-label="Link to section">#</a></h3>
+<p>The transmitter accepts <code>tx_start</code> while idle and captures <code>data_in</code>. The serial line idles high. A frame consists of a low start bit, eight data bits least-significant bit first, and a high stop bit.</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>State</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>idle</code></td>
+<td>Wait for <code>tx_start</code>; capture byte, assert busy, drive start bit low</td>
+</tr>
+<tr>
+<td><code>data</code></td>
+<td>Use 16 tick intervals to advance from the start bit through data bits 0–7</td>
+</tr>
+<tr>
+<td><code>stop</code></td>
+<td>Finish the final data-bit interval, then drive the stop bit high</td>
+</tr>
+<tr>
+<td><code>finish_stop</code></td>
+<td>Hold the stop interval, clear busy, pulse done, return to idle</td>
+</tr>
+</tbody></table></div>
+<p><code>tx_done</code> is high for one 100 MHz clock cycle. A new start pulse while busy is not queued. There is no TX FIFO. The software contract avoids this by waiting for each transmission to finish before starting another.</p>
+<p>For byte <code>0x55</code>, the data bits on the wire are <code>1,0,1,0,1,0,1,0</code>. The most significant bit is not transmitted first.</p>
+<h3 id="section-21">6.3 RX: serial frame to parallel byte<a class="anchor" href="#section-21" aria-label="Link to section">#</a></h3>
+<p>The receiver samples the serial input through <code>sync1</code> and <code>sync2</code>; <code>sync2_d</code> stores a delayed synchronized value for falling-edge detection. The implementation therefore has two synchronization stages plus a delayed sample for detecting an edge. A source comment calling all three a synchronizer should be read with that distinction.</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Idle</td>
+<td>Detect a high-to-low transition</td>
+</tr>
+<tr>
+<td>Start</td>
+<td>Wait about half a bit, using eight ticks, and confirm the start remains low</td>
+</tr>
+<tr>
+<td>Data</td>
+<td>Sample once per bit, 16 ticks apart, into bits 0 through 7</td>
+</tr>
+<tr>
+<td>Stop</td>
+<td>Check that the stop sample is high</td>
+</tr>
+</tbody></table></div>
+<p>For a valid stop bit, RX updates <code>rx_data</code> and pulses <code>rx_done</code>. A low stop sample produces <code>f_error</code> instead. Both event flags are cleared on subsequent clocks. The receiver has no parity checking and no majority-vote sampling; the 16× tick establishes sample timing.</p>
+<p>Although a comment in RX refers to seven bits, the actual bit counter covers eight data bits. This guide describes the implemented logic.</p>
+<h3 id="section-22">6.4 Core and buffered wrapper<a class="anchor" href="#section-22" aria-label="Link to section">#</a></h3>
+<p><code>uart_loopback_core</code> shares the baud tick between TX and RX and connects TX&#39;s serial output to RX&#39;s serial input internally. Its purpose is to test serialization and reconstruction without requiring an external cable.</p>
+<p><code>uart_loopback_buffered</code> adds the FIFO. RX&#39;s completed byte feeds <code>data_in</code>, and <code>rx_done</code> feeds the write request. Since the modules are clocked processes, the FIFO sees the newly asserted RX done/data pair at the following rising edge.</p>
+<p>Sharing a tick makes this an effective internal integration test, but it does not establish tolerance to an external sender with an independent clock or different baud error.</p>
+<h3 id="section-23">6.5 FIFO: 32 stored bytes<a class="anchor" href="#section-23" aria-label="Link to section">#</a></h3>
+<p>The FIFO stores <strong>32 × 8 bits</strong> and has read/write pointers and an occupancy count. Both interfaces use the same 100 MHz clock. It is not an asynchronous clock-domain-crossing FIFO.</p>
+<p>Reset clears the pointers, occupancy, and output byte. It does not erase every storage location; clearing occupancy makes the old stored contents unavailable as valid queued data.</p>
+<p>Reads are registered: an accepted read updates <code>data_out</code> after that clock edge. <code>data_out</code> holds its last value until another accepted read or reset. It does not continuously show the next unread byte.</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>State before edge</th>
+<th>Requested operations</th>
+<th>Accepted operations</th>
+<th>Count change</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Neither empty nor full</td>
+<td>Read only</td>
+<td>Read</td>
+<td>−1</td>
+</tr>
+<tr>
+<td>Neither empty nor full</td>
+<td>Write only</td>
+<td>Write</td>
+<td>+1</td>
+</tr>
+<tr>
+<td>Neither empty nor full</td>
+<td>Read and write</td>
+<td>Both</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Empty</td>
+<td>Read only</td>
+<td>Neither</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Empty</td>
+<td>Read and write</td>
+<td>Write only</td>
+<td>+1</td>
+</tr>
+<tr>
+<td>Full</td>
+<td>Write only</td>
+<td>Neither</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Full</td>
+<td>Read and write</td>
+<td>Read only</td>
+<td>−1</td>
+</tr>
+</tbody></table></div>
+<p>Acceptance uses the count <strong>before</strong> the edge. Consequently, a simultaneous read does not rescue a write requested while full, and a simultaneous write does not provide immediate fall-through data to a read while empty.</p>
+<p>If RX delivers another byte while full, that new byte is dropped. The design exposes the full level but does not record a persistent overflow event.</p>
+<h2 id="section-24">7. Why the command and completion logic exists<a class="anchor" href="#section-24" aria-label="Link to section">#</a></h2>
+<h3 id="section-25">7.1 One request must cause one operation<a class="anchor" href="#section-25" aria-label="Link to section">#</a></h3>
+<p>A GPIO output stays at its last written value until software changes it. A CPU request can therefore remain high for many FPGA clocks. If a FIFO treated that high level as a read enable every clock, one software request could drain many bytes. A held TX request could start another transmission when TX returns to idle.</p>
+<p><code>command_pulse</code> stores the previous command value and produces a registered, one-cycle pulse only when the current value is high and the previous value was low. Holding the command high generates no additional pulses. Software must lower it before making another request.</p>
+<p>This is an <strong>edge detector</strong>. It is not a mechanical-switch debounce filter and does not, by itself, safely synchronize an arbitrary asynchronous input. Here the command arrives through GPIO in the same clock domain.</p>
+<p>After reset, its previous value is zero. A command already high when reset is released can therefore be interpreted as a new request. The application initializes commands to zero and relies on a correctly reset hardware system.</p>
+<h3 id="section-26">7.2 A one-cycle result is too brief for polling<a class="anchor" href="#section-26" aria-label="Link to section">#</a></h3>
+<p>The TX done pulse lasts 10 ns. C polling through AXI is not guaranteed to sample that instant. The wrapper converts it into <code>tx_complete</code>, which stays high while <code>tx_command</code> remains high. Software can detect it later and acknowledge it by lowering its request.</p>
+<p>The same persistent completion convention is used for FIFO reads. It tells software that the returned byte has been made valid, independently of whether the FIFO has become empty.</p>
+<h3 id="section-27">7.3 Four-phase handshake<a class="anchor" href="#section-27" aria-label="Link to section">#</a></h3>
+<pre><code class="language-text">Phase                     Software request      Hardware completion
+Idle                              0                       0
+Request operation                 1                       0
+Operation finishes                1                       1
+Software acknowledges             0                       1 → 0
+Ready for next operation          0                       0
+</code></pre>
+<p>Software raises the request, waits for completion high, lowers the request, and waits for completion low. The final wait prevents the next transaction from mistaking an old completion flag for a new result.</p>
+<p>For TX, software must present the byte together with the request and hold the request until completion. TX captures the byte when it accepts the resulting pulse.</p>
+<h3 id="section-28">7.4 Read timing, edge by edge<a class="anchor" href="#section-28" aria-label="Link to section">#</a></h3>
+<p>Assume the FIFO is not empty and <code>read_command</code> becomes high before edge A. These are custom-wrapper clock edges, not the time measured from the beginning of an AXI write.</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Rising edge</th>
+<th>Pulse generator</th>
+<th>FIFO</th>
+<th>Completion process</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>A</td>
+<td>Detects the rising request; schedules read pulse high</td>
+<td>Sees the previous low pulse</td>
+<td>No accepted read yet</td>
+</tr>
+<tr>
+<td>B</td>
+<td>Schedules pulse low</td>
+<td>Sees pulse high; reads byte; updates output</td>
+<td>Records <code>read_pending = 1</code> because the read was accepted</td>
+</tr>
+<tr>
+<td>C</td>
+<td>Pulse remains low</td>
+<td>No second read</td>
+<td>Sees previous pending value; asserts <code>read_complete</code></td>
+</tr>
+</tbody></table></div>
+<p>VHDL signal assignments in clocked processes take effect after the processes evaluate. Another process running on the same edge sees the previous signal values. This explains the staging; it does not mean production logic should avoid rising edges.</p>
+<p>If the accepted read removes the last byte, <code>fifo_empty</code> becomes high after edge B. Completion still asserts at C because <code>read_pending</code> remembers that a valid read happened. Testing only the current empty flag would lose this information.</p>
+<p>If a request is raised while empty, the FIFO rejects it and no read completion is generated. Keeping the request high will not retry when a byte arrives later. That is why C waits for nonempty <strong>before</strong> raising the read request.</p>
+<h3 id="section-29">7.5 Why earlier tests held a command for five cycles<a class="anchor" href="#section-29" aria-label="Link to section">#</a></h3>
+<p>Holding a request for several cycles tests that only one operation occurs even when software is slow to lower it. Five cycles was a test stimulus duration, not the software interface&#39;s required delay. The C program uses completion flags instead of a fixed five-cycle wait. The later held-command test keeps TX requested even after TX finishes, which also tests against accidental retransmission.</p>
+<h2 id="section-30">8. C application structure<a class="anchor" href="#section-30" aria-label="Link to section">#</a></h2>
+<p>The final application separates the application policy from the GPIO handshakes. The helpers perform one operation; <code>main()</code> decides what to do with the result.</p>
+<h3 id="section-31">8.1 Startup and main loop<a class="anchor" href="#section-31" aria-label="Link to section">#</a></h3>
+<ol>
+<li>Call <code>init_platform()</code>.</li>
+<li>Initialize the UART GPIO driver object with <code>XPAR_AXI_GPIO_1_BASEADDR</code>. On failure, print an error, clean up, and return failure.</li>
+<li>Write zero to channel 1 so both commands are low.</li>
+<li>Print the ready message and initial channel-2 status.</li>
+<li>Block in <code>inbyte()</code> until a PC character arrives.</li>
+<li>Exit if it is uppercase <code>Q</code>.</li>
+<li>Call <code>uart_transmit_byte()</code> and then <code>uart_receive_byte()</code>.</li>
+<li>Require the received byte to match the transmitted byte and the FIFO to be empty after this single-byte transaction.</li>
+<li>Echo the verified byte with <code>outbyte()</code> and repeat.</li>
+<li>On quit or an error after initialization, lower commands, call <code>cleanup_platform()</code>, and return the result.</li>
+</ol>
+<p>The equality check and final empty check belong to this loopback demonstration. They would not be valid general rules for a display that sends independent messages or keeps multiple bytes queued.</p>
+<h3 id="section-32">8.2 Helper contracts<a class="anchor" href="#section-32" aria-label="Link to section">#</a></h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Inputs</th>
+<th>Result</th>
+<th>Responsibilities</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>uart_wait_status()</code></td>
+<td>GPIO pointer, bit mask, expected masked value</td>
+<td>Last complete status sample</td>
+<td>Poll until condition matches or attempt limit is reached</td>
+</tr>
+<tr>
+<td><code>uart_transmit_byte()</code></td>
+<td>GPIO pointer, one <code>u8</code> byte</td>
+<td><code>XST_SUCCESS</code> or <code>XST_FAILURE</code></td>
+<td>Raise TX command, await completion, acknowledge, await clear</td>
+</tr>
+<tr>
+<td><code>uart_receive_byte()</code></td>
+<td>GPIO pointer, pointer to result byte</td>
+<td><code>XST_SUCCESS</code> or <code>XST_FAILURE</code></td>
+<td>Await nonempty, request read, capture valid byte, acknowledge, await clear</td>
+</tr>
+</tbody></table></div>
+<p>All three helpers are declared <code>static</code>: their function names are private to this C source file. The prototypes near the top allow <code>main()</code> to call helpers whose bodies appear later.</p>
+<h3 id="section-33">8.3 Polling helper<a class="anchor" href="#section-33" aria-label="Link to section">#</a></h3>
+<p><code>uart_wait_status()</code> repeatedly reads channel 2 and checks <code>(gpio_status &amp; mask) == expected</code>.</p>
+<ul>
+<li><code>expected = mask</code> waits for all selected bits to be high.</li>
+<li><code>expected = 0U</code> waits for all selected bits to be low.</li>
+<li>The function returns the full sampled word, including byte and other flags.</li>
+<li>Reaching <code>UART_POLL_LIMIT = 1000000U</code> also returns a sample. The caller must inspect the returned flag to distinguish success from timeout.</li>
+</ul>
+<p>The limit counts reads; it is not a calibrated number of milliseconds. The CPU actively polls while waiting. <code>inbyte()</code> is also blocking, but its wait is for a PC character rather than for the custom peripheral.</p>
+<h3 id="section-34">8.4 Transmit helper<a class="anchor" href="#section-34" aria-label="Link to section">#</a></h3>
+<p>The command word is <code>(u32)byte | UART_TX_COMMAND_MASK</code>. For <code>byte = 0x55</code>, this is <code>0x155</code>. One GPIO write presents both the data and the request.</p>
+<p>The helper waits for <code>tx_complete</code>, writes zero to acknowledge, and waits for completion to clear. If completion fails to arrive, it prints the corresponding timeout and lowers the command. A clear timeout is also reported as failure.</p>
+<p>There is no initial wait for busy in this helper. Its precondition is that calls are sequential and the previous operation has completed; it is not an arbitrary multi-client transmitter service.</p>
+<h3 id="section-35">8.5 Receive helper<a class="anchor" href="#section-35" aria-label="Link to section">#</a></h3>
+<p>The helper first waits for <code>fifo_empty</code> to clear. It then writes <code>UART_READ_COMMAND_MASK</code> and waits for <code>read_complete</code>.</p>
+<p>When completion is observed, it extracts the data from <strong>that same status sample</strong>: <code>(u8)(gpio_status &amp; UART_DATA_MASK)</code>. It then lowers the command and waits for completion to clear. Only after the whole handshake succeeds does it write the received value through the caller&#39;s pointer and return success.</p>
+<p>Waiting for TX completion alone is not a replacement for checking FIFO availability. Serial reception and FIFO insertion have their own timing, and an external receiver path could have different behavior.</p>
+<h3 id="section-36">8.6 Pointers and masks in this project<a class="anchor" href="#section-36" aria-label="Link to section">#</a></h3>
+<p><code>XGpio uart</code> is a driver object that contains information such as the device&#39;s base address. <code>&amp;uart</code> means “the address of this driver object”; the helper parameter <code>XGpio *uart</code> receives that address.</p>
+<p><code>&amp;rx_byte</code> means “where the caller wants the received byte stored.” Inside the helper, <code>*byte = received</code> writes to that location. This lets the function return success/failure while separately returning an 8-bit data value. The caller must not use the result byte after a failed call.</p>
+<p><code>u8</code> holds an unsigned byte. <code>u32</code> holds the combined 32-bit register value. The current TX byte is already <code>u8</code>, so no extra <code>&amp; 0xFF</code> is necessary before combining it with the command. For a wider value, masking makes the intended eight-bit field explicit and prevents higher bits from setting request bits.</p>
+<pre><code class="language-text">0x55 | 0x100  = 0x155    OR adds the TX request bit
+0x1155 &amp; 0xFF = 0x55    AND extracts the byte field
+0x1155 &amp; 0x1000         tests the read-complete field
+</code></pre>
+<p>A mask does not allow one UART frame to carry more than eight data bits. To send a larger number, split it into several bytes and define their order and message format.</p>
+<p>The current generated driver configuration accepts a base address in <code>XGpio_Initialize()</code>. Examples from older non-SDT platforms may instead use a device ID. Follow the signature in this platform&#39;s generated <code>xgpio.h</code>, rather than mixing the two styles.</p>
+<h3 id="section-37">8.7 Error and exit behavior<a class="anchor" href="#section-37" aria-label="Link to section">#</a></h3>
+<p>The application stops on initialization failure, handshake timeout, loopback mismatch, or unexpected remaining FIFO data. It does not silently continue after an uncertain transaction.</p>
+<p>Lowering the GPIO command acknowledges or cancels the request level; it does <strong>not</strong> reset the FIFO or abort a frame already being transmitted. <code>cleanup_platform()</code> is not a substitute for resetting custom PL hardware. After an uncertain timeout, rerun with a proper system/hardware reset before assuming a clean state.</p>
+<p>Uppercase <code>Q</code> is consumed as a quit command and is not echoed. Lowercase <code>q</code>, digits <code>0</code> and <code>1</code>, spaces, and punctuation are ordinary payload characters in this version. The old LED commands are no longer implemented. Echo output adds no line ending; line breaks occur only if corresponding characters are sent.</p>
+<h2 id="section-38">9. A worked transaction: sending A<a class="anchor" href="#section-38" aria-label="Link to section">#</a></h2>
+<p>The ASCII byte for <code>A</code> is <code>0x41</code>.</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Action</th>
+<th>Relevant value or event</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>HTerm sends A; PS UART0 receives it</td>
+<td><code>inbyte()</code> returns <code>0x41</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td>ARM raises TX request with data</td>
+<td>Channel 1 = <code>0x141</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>Edge detector pulses TX start</td>
+<td>TX captures <code>0x41</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td>TX sends a frame; RX samples it</td>
+<td>Internal serial connection, approximately 9600 baud</td>
+</tr>
+<tr>
+<td>5</td>
+<td>RX produces a byte</td>
+<td>FIFO accepts <code>0x41</code> on the following clock</td>
+</tr>
+<tr>
+<td>6</td>
+<td>TX completion is recorded</td>
+<td>Status bit 11 becomes high</td>
+</tr>
+<tr>
+<td>7</td>
+<td>ARM acknowledges TX</td>
+<td>Channel 1 = <code>0</code>; wait for bit 11 low</td>
+</tr>
+<tr>
+<td>8</td>
+<td>ARM verifies data is available</td>
+<td>Wait for status bit 8 low</td>
+</tr>
+<tr>
+<td>9</td>
+<td>ARM requests FIFO read</td>
+<td>Channel 1 = <code>0x200</code></td>
+</tr>
+<tr>
+<td>10</td>
+<td>FIFO output becomes valid; completion follows</td>
+<td>Status bit 12 high, low byte <code>0x41</code></td>
+</tr>
+<tr>
+<td>11</td>
+<td>ARM copies byte and acknowledges read</td>
+<td>Channel 1 = <code>0</code>; wait for bit 12 low</td>
+</tr>
+<tr>
+<td>12</td>
+<td>ARM checks match and FIFO empty</td>
+<td>Received <code>0x41</code> equals sent <code>0x41</code></td>
+</tr>
+<tr>
+<td>13</td>
+<td>ARM echoes the result</td>
+<td><code>outbyte(0x41)</code> sends A through PS UART0</td>
+</tr>
+</tbody></table></div>
+<p>The exact relative timing of FIFO arrival and TX completion is not assumed by the software; it checks the necessary condition at each stage.</p>
+<h2 id="section-39">10. Rebuild, export, and run<a class="anchor" href="#section-39" aria-label="Link to section">#</a></h2>
+<p>The inspected project uses Vivado/Vitis <strong>2026.1</strong>. UI labels can vary between tool releases. Keep hardware, platform, and application versions aligned.</p>
+<h3 id="section-40">10.1 Decide which build is needed<a class="anchor" href="#section-40" aria-label="Link to section">#</a></h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Change</th>
+<th>Required work</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>C messages, application logic, helper code</td>
+<td>Rebuild application and rerun it</td>
+</tr>
+<tr>
+<td>VHDL, GPIO widths, wiring, address map, PS clock, constraints</td>
+<td>Rebuild hardware, export updated XSA, update/build platform, rebuild application, program and run</td>
+</tr>
+<tr>
+<td>Testbench only</td>
+<td>Rerun simulation; no board bitstream change required</td>
+</tr>
+</tbody></table></div>
+<h3 id="section-41">10.2 Hardware in Vivado<a class="anchor" href="#section-41" aria-label="Link to section">#</a></h3>
+<ol>
+<li>Open the active <code>.xpr</code> listed in Section 3.</li>
+<li>Save edited HDL and block design files. Confirm the changes were made to this project&#39;s active copies.</li>
+<li>Open <code>system.bd</code>. If module ports changed, refresh the module reference and reconnect affected signals.</li>
+<li>Compare GPIO widths, slices, concat order, clock/reset connections, and addresses with Sections 4–5.</li>
+<li>Validate the block design. Resolve new errors and understand warnings before continuing.</li>
+<li>Generate block-design output products when needed, and use the Vivado-managed HDL wrapper with <code>system_wrapper</code> as synthesis top.</li>
+<li>Run synthesis, implementation, and Generate Bitstream.</li>
+<li>Inspect timing and DRC results, not just the final “completed” message.</li>
+<li>Export hardware with the bitstream included. Save the intended updated handoff as <code>./system_wrapper.xsa</code>.</li>
+</ol>
+<p>Earlier validation showed negative PS DDR DQS-to-clock delay warnings for preset parameters. This guide does not change or certify those board-specific DDR timing values. Keep the board preset consistent with the actual board and investigate any new DDR initialization failures; do not set values to zero merely to hide a warning.</p>
+<h3 id="section-42">10.3 Update the Vitis platform<a class="anchor" href="#section-42" aria-label="Link to section">#</a></h3>
+<ol>
+<li>Open <code>./vitis_workspace</code>.</li>
+<li>Select the platform component <code>arty_uart0_platform</code> and open its settings / <code>vitis-comp.json</code> view.</li>
+<li>Use the hardware specification update action, such as <strong>Switch XSA</strong> or the available re-read action, to load the newly exported root <code>system_wrapper.xsa</code>.</li>
+<li>Check that the hardware specification includes <code>axi_gpio_1</code> at the expected address.</li>
+<li>Build the platform, then build <code>hello_world</code>.</li>
+<li>Confirm the application still targets <code>standalone_ps7_cortexa9_0</code> and <code>ps7_cortexa9_0</code>.</li>
+</ol>
+<p>AMD&#39;s documented update flow explicitly updates the XSA reference and rebuilds the platform; exporting from Vivado alone does not perform that platform update. <a href="https://docs.amd.com/r/en-US/ug1165-zynq-embedded-design-tutorial/Updating-Hardware-in-the-Vitis-Software-Platform">AMD Vitis hardware update guide</a>.</p>
+<p>In this BSP, standard input and output both use PS UART0 at base <code>0xE0000000</code>. That is why <code>inbyte()</code>, <code>outbyte()</code>, <code>print()</code>, and <code>xil_printf()</code> communicate with the same terminal.</p>
+<h3 id="section-43">10.4 Launch configuration<a class="anchor" href="#section-43" aria-label="Link to section">#</a></h3>
+<p>The saved launch configuration is <code>hello_world_app_hw_1</code> in the application&#39;s <code>_ide/launch.json</code>. It enables system reset, device programming, PS7 initialization, PS7 post-initialization, and processor reset. It targets Cortex-A9 core 0 and does not stop at application entry.</p>
+<p>Its relevant assets are:</p>
+<pre><code class="language-text">hello_world/_ide/bitstream/system_wrapper.bit
+hello_world/_ide/psinit/ps7_init.tcl
+hello_world/build/hello_world.elf
+</code></pre>
+<p>These paths are relative to the active Vitis workspace. The launch currently uses PS initialization Tcl (<code>isFsbl: false</code>), rather than the alternative FSBL mode also represented in the configuration. Do not mix stale launch assets with a newly exported platform.</p>
+<p>If Vitis reports that a task is already running, stop the existing application/debug launch before launching again. Avoid starting a second competing session against the same target.</p>
+<h3 id="section-44">10.5 Board and HTerm<a class="anchor" href="#section-44" aria-label="Link to section">#</a></h3>
+<ol>
+<li>Power the board and connect the PC through the micro-USB JTAG/UART connection with a data-capable cable.</li>
+<li>Identify its current COM port. The COM number is PC-dependent and is not fixed by this project.</li>
+<li>Connect HTerm at <strong>115200 baud, 8 data bits, no parity, 1 stop bit</strong>, without hardware flow control for this demonstration. Do not select 9600 for the PC link.</li>
+<li>Close other serial-terminal connections to the same COM port. Disable local echo if enabled, so received characters are not confused with locally displayed typing.</li>
+<li>Launch the built application with the saved hardware configuration. Keep HTerm connected before launch to capture the startup messages.</li>
+<li>Wait for <code>UART loopback ready. Q = quit</code> and inspect the startup status.</li>
+<li>Send individual ASCII characters. Expect the same characters back, without extra per-byte debug text.</li>
+<li>Send uppercase <code>Q</code> when finished. The current program exits without echoing Q or printing the older LED shutdown message.</li>
+</ol>
+<p>JTAG loading is a development workflow. This project has not established a persistent custom boot image that automatically restores the application and PL after power cycling. Existing factory/flash software can print its own banner. Seeing <code>Arty Z7 -Z20 Rev. B Demo Image</code> alone does not identify the current custom bitstream or application.</p>
+<h2 id="section-45">11. Verification and evidence<a class="anchor" href="#section-45" aria-label="Link to section">#</a></h2>
+<h3 id="section-46">11.1 Simulation coverage accumulated during development<a class="anchor" href="#section-46" aria-label="Link to section">#</a></h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Test</th>
+<th>Main purpose</th>
+<th>Evidence and limits</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>uart_sim.v</code></td>
+<td>Core serial TX/RX loopback for <code>20 FF 33 55 AA 80 01</code></td>
+<td>User reported seven PASSED results; tests several bit patterns</td>
+</tr>
+<tr>
+<td><code>UART_sim_buffered.v</code></td>
+<td>Send seven bytes, then read them in order</td>
+<td>User reported all seven values in order</td>
+</tr>
+<tr>
+<td><code>command_pulse_sim.v</code></td>
+<td>Observe pulse generation for held and repeated commands</td>
+<td>Waveform inspection; not a comprehensive assertion test</td>
+</tr>
+<tr>
+<td><code>uart_software_interface_sim.v</code></td>
+<td>Command interface, buffered data order, final empty</td>
+<td>Seven-byte interface test; holding a request for five cycles checks level-to-pulse behavior</td>
+</tr>
+<tr>
+<td><code>uart_held_command_sim.v</code></td>
+<td>Persistent request/completion behavior</td>
+<td>Held TX request after completion, no repeated transmission, single read, completion clear, final empty</td>
+</tr>
+<tr>
+<td>Earlier FIFO simulation</td>
+<td>Standalone FIFO behavior</td>
+<td>User reported prior simulation; exhaustive boundary coverage was not established here</td>
+</tr>
+</tbody></table></div>
+<p>The currently selected simulation top is <code>uart_held_command_sim</code>. Its TX command is held for another 200000 clock cycles, about 2 ms at 100 MHz, after completion. It also checks read completion persistence and clearing, and contains a 10 ms watchdog. The user reported a received <code>55</code>, completion cleared, and no more bytes to read.</p>
+<p>Testbench stimulus often changes on falling edges so it is stable before the next rising edge. The synthesized hardware still uses rising-edge registers. In Verilog testbench checks, case equality <code>===</code> and inequality <code>!==</code> make unknown values explicit; they are useful when a test must fail instead of overlooking an X/Z value.</p>
+<p>To rerun a test, select its simulation top, launch behavioral simulation, and run long enough for the UART frames and watchdog. The initial 1000 ns default run is much shorter than one approximately 1 ms UART frame. A <code>run 10 ms</code> command is sufficient to reach the current held-command test&#39;s watchdog; a passing test finishes earlier. Check console assertions as well as waveforms.</p>
+<h3 id="section-47">11.2 Routed timing<a class="anchor" href="#section-47" aria-label="Link to section">#</a></h3>
+<p>The inspected <code>system_wrapper_timing_summary_routed.rpt</code> reports a 100 MHz <code>clk_fpga_0</code> clock:</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Measure</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Worst setup slack, WNS</td>
+<td>+3.505 ns</td>
+</tr>
+<tr>
+<td>Total negative setup slack, TNS</td>
+<td>0.000 ns</td>
+</tr>
+<tr>
+<td>Worst hold slack, WHS</td>
+<td>+0.037 ns</td>
+</tr>
+<tr>
+<td>Total negative hold slack, THS</td>
+<td>0.000 ns</td>
+</tr>
+<tr>
+<td>Worst pulse-width slack, WPWS</td>
+<td>+3.750 ns</td>
+</tr>
+<tr>
+<td>Failing setup / hold / pulse-width endpoints</td>
+<td>0 / 0 / 0</td>
+</tr>
+<tr>
+<td>Unconstrained internal endpoints</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Output ports without output-delay constraint</td>
+<td>1</td>
+</tr>
+</tbody></table></div>
+<p>The report states that all user-specified timing constraints are met. Positive setup slack means data arrives with margin before the sampling deadline; positive hold slack means the minimum-delay requirement is met. Pulse-width slack checks the required clock pulse durations.</p>
+<p>The report also flags one output without an output-delay constraint. The visible fabric output is the LED, but the excerpt does not name the port; confirm it in Vivado before treating the warning as explained. Do not generalize this timing pass to an external UART pin interface that has not yet been added or constrained. Timing success also does not prove protocol correctness.</p>
+<h3 id="section-48">11.3 Board results reported by you<a class="anchor" href="#section-48" aria-label="Link to section">#</a></h3>
+<p>The fixed-byte test reported:</p>
+<pre><code class="language-text">transmission complete
+Transmit handshake finished
+Received byte: 55
+Read handshake finished
+UART loopback passed
+</code></pre>
+<p>The interactive test later returned <code>A</code>, <code>W</code>, <code>1</code>, and <code>G</code>, with diagnostic receive values <code>41</code>, <code>57</code>, <code>31</code>, and <code>47</code>. After removing routine per-byte diagnostics and refactoring into helpers, you reported:</p>
+<pre><code class="language-text">UART loopback ready. Q = quit
+starting status expected: (00000100) =&gt; 00000100
+asdfghjklrfvb hjk,l ff g h g
+</code></pre>
+<p>This supports successful end-to-end operation for the tested manual input, including spaces and punctuation. It does not establish error-free performance for long bursts, all 256 byte values, or an external serial device.</p>
+<h3 id="section-49">11.4 Useful additional tests<a class="anchor" href="#section-49" aria-label="Link to section">#</a></h3>
+<p>These are proposed coverage extensions, not completed results:</p>
+<ol>
+<li>Exercise FIFO capacity, pointer wraparound, and simultaneous read/write at empty and full.</li>
+<li>Apply invalid stop bits and verify framing-error behavior and recovery.</li>
+<li>Inject a request while TX is busy or the FIFO is empty and confirm the documented outcome.</li>
+<li>Reset during a frame and during each handshake phase; verify a clean restart.</li>
+<li>Use independently timed TX/RX stimulus and varied start phase to assess external baud tolerance.</li>
+<li>Send paced long sequences with automatic byte comparison, then increase input rate to measure loss.</li>
+<li>Test every byte value with a separate binary test mode that does not reserve Q or mix diagnostic text with payload.</li>
+</ol>
+<h2 id="section-50">12. Performance and current limitations<a class="anchor" href="#section-50" aria-label="Link to section">#</a></h2>
+<p>The PC link can carry about <code>115200 / 10 = 11520</code> 8N1 characters per second. The custom UART can carry about <code>9600 / 10 = 960</code> characters per second, before software overhead. The slow serial link is therefore the main throughput limit.</p>
+<p>The application processes one byte from start to finish before reading the next PC byte. During that interval, more PC characters can accumulate in the PS UART receive buffer. A long unpaced burst can overflow that ingress buffer. The 32-byte PL FIFO is farther downstream and cannot protect the PS receive buffer from that mismatch.</p>
+<p>The current design has no software receive queue, interrupt-driven processing, DMA, or end-to-end flow control. It is intended for paced interactive testing. The PL FIFO is useful hardware, but this particular main loop normally uses only a single outstanding byte.</p>
+<p>Other limits to remember:</p>
+<ul>
+<li>No queued TX requests: a pulse while busy can be lost.</li>
+<li>No persistent software-visible framing-error or overflow flag.</li>
+<li>No automatic retry or hardware recovery after timeout.</li>
+<li>Polling limits count attempts rather than elapsed time.</li>
+<li>Q cannot interrupt an already-running helper; it is recognized when the main loop next reads PC input.</li>
+<li>Shared-clock internal loopback does not test external electrical connections or independent baud drift.</li>
+<li>Whole-channel command writes and helper sequencing assume a single software owner.</li>
+<li>The application reserves one byte value for quitting and includes startup/error text, so it is not a transparent binary bridge.</li>
+</ul>
+<h2 id="section-51">13. Troubleshooting<a class="anchor" href="#section-51" aria-label="Link to section">#</a></h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Likely checks</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>No COM port</td>
+<td>Board power, USB data cable, correct connector, PC driver/device enumeration</td>
+</tr>
+<tr>
+<td>COM exists but no ready message</td>
+<td>Actual application launch, terminal opened before launch, correct COM, PS standard I/O configuration</td>
+</tr>
+<tr>
+<td>Garbled startup text</td>
+<td>PC link set to 115200 8N1; do not use the custom UART&#39;s 9600 setting</td>
+</tr>
+<tr>
+<td>Only the demo image banner appears</td>
+<td>Factory/old software may be running; verify the selected ELF, bitstream, and successful launch</td>
+</tr>
+<tr>
+<td>“Task is already running”</td>
+<td>Stop the prior run/debug task, then launch the intended configuration</td>
+</tr>
+<tr>
+<td>Duplicate platform/app names</td>
+<td>Open <code>vitis_workspace</code>; inspect actual component paths</td>
+</tr>
+<tr>
+<td>Initial status is not <code>0x100</code></td>
+<td>Confirm fresh reset, current bitstream, GPIO base, concat order; remember retained byte data can make later idle values differ</td>
+</tr>
+<tr>
+<td>TX completion timeout</td>
+<td>Command bit/slice, clock/reset, TX start pulse, busy state, completion mapping, stale hardware</td>
+</tr>
+<tr>
+<td>FIFO-data timeout</td>
+<td>RX serial connection/timing, framing error, FIFO write path; TX completion does not prove successful RX</td>
+</tr>
+<tr>
+<td>Read completion timeout</td>
+<td>Request made while empty, missing new command edge, incorrect pending logic, swapped status bits</td>
+</tr>
+<tr>
+<td>Completion never clears</td>
+<td>Request still high, wrong GPIO write/channel, wrong completion bit, reset or stale platform issue</td>
+</tr>
+<tr>
+<td>Same byte repeats</td>
+<td>Held level reaching TX/FIFO directly, missing edge detector, incorrect acknowledgement sequencing</td>
+</tr>
+<tr>
+<td>Correct individual characters, loss on paste</td>
+<td>PC input rate exceeds blocking loop throughput; pace input and consider buffering/flow control</td>
+</tr>
+<tr>
+<td>Echo appears twice</td>
+<td>Check terminal local echo and accidental retransmission separately</td>
+</tr>
+<tr>
+<td>Character comparison fails</td>
+<td>Data slice, FIFO validity timing, bit order, masks, unexpected queued bytes</td>
+</tr>
+<tr>
+<td>New C runs against old hardware</td>
+<td>Re-export XSA, update platform, rebuild app, verify launch bitstream assets</td>
+</tr>
+</tbody></table></div>
+<p>Debug in layers: first confirm the correct PS application is running, then validate GPIO startup status, then command/completion behavior, then serial TX/RX and FIFO events. A logic analyzer core can later expose internal hardware signals, but it is not part of this saved design.</p>
+<h2 id="section-52">14. Extending the project to an external device<a class="anchor" href="#section-52" aria-label="Link to section">#</a></h2>
+<p>The architecture is a useful foundation for a display or other serial device: hardware handles bit timing and buffering, while C handles message meaning. Moving from internal loopback to external communication requires an initial hardware change as well as application changes.</p>
+<h3 id="section-53">Hardware changes<a class="anchor" href="#section-53" aria-label="Link to section">#</a></h3>
+<ol>
+<li>Expose a serial TX output and an independent serial RX input through the core and wrapper ports.</li>
+<li>Replace the internal TX-to-RX loopback wire with these external paths.</li>
+<li>Add top-level ports and suitable board pin constraints and I/O standards.</li>
+<li>Connect TX to the device&#39;s RX, RX to its TX, and a common ground; verify compatible signal voltages and use appropriate level conversion when needed.</li>
+<li>Configure baud rate and framing to match the device, then simulate and rebuild the hardware.</li>
+</ol>
+<h3 id="section-54">Software changes<a class="anchor" href="#section-54" aria-label="Link to section">#</a></h3>
+<ol>
+<li>Keep the low-level handshake helpers if the GPIO contract remains unchanged.</li>
+<li>Remove loopback-only requirements that received data equals the just-sent byte and that the FIFO must immediately become empty.</li>
+<li>Define command/response framing, byte order, terminators or lengths, and error handling from the device&#39;s protocol.</li>
+<li>Handle unsolicited and multi-byte responses, with buffering and timeout policies appropriate to that device.</li>
+<li>Avoid blocking PC input or a transmit operation so long that incoming external data overflows the FIFO.</li>
+</ol>
+<p>Once the external pins and protocol-independent hardware are established, many future behavior changes can be made in C alone. A changed baud rate, incompatible frame format, insufficient FIFO depth, or new hardware status signals can still require a new bitstream.</p>
+<p>An eventual custom AXI-Lite peripheral could replace the GPIO slices/concat with dedicated data, command, status, and error registers. That is an architectural improvement to consider after this version is understood and tested, not a requirement for the current working demonstration.</p>
+<h2 id="section-55">15. Learning reference<a class="anchor" href="#section-55" aria-label="Link to section">#</a></h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Meaning in this project</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>UART</td>
+<td>Asynchronous serial framing with start, data, and stop bits</td>
+</tr>
+<tr>
+<td>8N1</td>
+<td>Eight data bits, no parity, one stop bit</td>
+</tr>
+<tr>
+<td>Baud</td>
+<td>Serial symbol rate; for this binary UART, approximately the bit rate</td>
+</tr>
+<tr>
+<td>GPIO</td>
+<td>Parallel general-purpose input/output signals, used here as registers connected to custom logic</td>
+</tr>
+<tr>
+<td>AXI</td>
+<td>The on-chip bus used by the ARM to access PL peripherals</td>
+</tr>
+<tr>
+<td>Memory-mapped I/O</td>
+<td>Reading/writing addresses that access hardware registers</td>
+</tr>
+<tr>
+<td>FIFO</td>
+<td>First-in, first-out storage preserving byte order</td>
+</tr>
+<tr>
+<td>Clock enable</td>
+<td>A signal permitting an update on selected edges of an existing clock</td>
+</tr>
+<tr>
+<td>Handshake</td>
+<td>A request/completion/acknowledgement sequence coordinating participants</td>
+</tr>
+<tr>
+<td>Persistent completion</td>
+<td>A result flag retained long enough for software to observe and acknowledge it</td>
+</tr>
+<tr>
+<td>Synchronizer</td>
+<td>Registers that reduce the risk of metastability propagating from an asynchronous input</td>
+</tr>
+<tr>
+<td>BSP</td>
+<td>Board support package: generated hardware definitions, drivers, and runtime support</td>
+</tr>
+<tr>
+<td>Synthesis</td>
+<td>Translation of HDL into implementable logic</td>
+</tr>
+<tr>
+<td>Implementation</td>
+<td>Placement and routing of that logic in the device</td>
+</tr>
+<tr>
+<td>Bitstream</td>
+<td>Configuration data that realizes the PL hardware</td>
+</tr>
+<tr>
+<td>ELF</td>
+<td>Executable containing the compiled ARM application</td>
+</tr>
+</tbody></table></div>
+<p>VHDL and Verilog both describe hardware; this project uses VHDL for the design and Verilog for its testbenches. C runs instructions on the processor. A loop in C repeatedly executes software operations; a clocked VHDL process describes registers and their next-state behavior. Understanding that difference explains why a level held for a short time in C can span many hardware operations.</p>
+<h2 id="section-56">16. Source index and document maintenance<a class="anchor" href="#section-56" aria-label="Link to section">#</a></h2>
+<p>All short paths below are relative to <code>.</code>. The accompanying <code>source_manifest.json</code> records full paths, sizes, modification times, and SHA-256 fingerprints for the inspected sources and key artifacts. It identifies the files this guide was prepared against; it is not a replacement for source control or a project backup.</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Files</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>UART implementation</td>
+<td><code>hardware/arty_z7_hello.srcs/sources_1/imports/new/uart_pkg.vhd</code>, <code>BAUD_RATE.vhd</code>, <code>TX.vhd</code>, <code>RX.vhd</code>, <code>FIFO.vhd</code> in the same directory</td>
+</tr>
+<tr>
+<td>Integration wrappers</td>
+<td><code>hardware/arty_z7_hello.srcs/sources_1/new/uart_loopback_core.vhd</code>, <code>uart_loopback_buffered.vhd</code>, <code>command_pulse.vhd</code>, <code>uart_software_interface.vhd</code></td>
+</tr>
+<tr>
+<td>Block design</td>
+<td><code>hardware/arty_z7_hello.srcs/sources_1/bd/system/system.bd</code></td>
+</tr>
+<tr>
+<td>LED constraint</td>
+<td><code>hardware/arty_z7_hello.srcs/constrs_1/new/led_pin.xdc</code></td>
+</tr>
+<tr>
+<td>Core simulation</td>
+<td><code>hardware/arty_z7_hello.srcs/sim_1/imports/new/uart_sim.v</code></td>
+</tr>
+<tr>
+<td>Additional simulations</td>
+<td>Sources under <code>hardware/arty_z7_hello.srcs/sim_1/new/</code>; see manifest for exact filenames</td>
+</tr>
+<tr>
+<td>ARM application</td>
+<td><code>vitis_workspace/hello_world/src/helloworld.c</code></td>
+</tr>
+<tr>
+<td>Platform configuration</td>
+<td><code>vitis_workspace/arty_uart0_platform/vitis-comp.json</code></td>
+</tr>
+<tr>
+<td>Launch configuration</td>
+<td><code>vitis_workspace/hello_world/_ide/launch.json</code></td>
+</tr>
+<tr>
+<td>Current exported hardware</td>
+<td><code>system_wrapper.xsa</code></td>
+</tr>
+<tr>
+<td>Timing evidence</td>
+<td><code>hardware/arty_z7_hello.runs/impl_1/system_wrapper_timing_summary_routed.rpt</code></td>
+</tr>
+</tbody></table></div>
+<p>When changing the project, update the bit map, clock/baud values, handshake contract, file locations, and verification section together. A documentation statement of a passed test should identify an actual result; proposed tests should remain clearly marked as proposed.</p>
+<h3 id="section-57">External references<a class="anchor" href="#section-57" aria-label="Link to section">#</a></h3>
+<p>The project files are the primary source for this guide&#39;s specific implementation. These AMD references support the general GPIO behavior and hardware-update workflow:</p>
+<ul>
+<li><a href="https://docs.amd.com/r/en-US/pg144-axi-gpio/Operation">AXI GPIO operation and directions</a>.</li>
+<li><a href="https://docs.amd.com/r/en-US/pg144-axi-gpio/AXI-GPIO-Data-Register-GPIOx_DATA">AXI GPIO data register behavior</a>.</li>
+<li><a href="https://docs.amd.com/r/en-US/ug1165-zynq-embedded-design-tutorial/Updating-Hardware-in-the-Vitis-Software-Platform">Updating hardware in a Vitis platform</a>.</li>
+</ul>
+<p><strong>End of revision 1.</strong> The documentation describes the saved implementation and reported test evidence; no project source was changed to produce it.</p>
+</main></div><footer>Arty Z7-20 UART Loopback · Hardware & Software Guide · Prepared from the saved project on 17 November 2026.</footer>
+</body></html>
